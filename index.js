@@ -2,6 +2,7 @@ const express = require('express')
 const bcrypt = require('bcrypt')
 const bodyParser = require('body-parser')
 const autheticate = require('./model/authenticate')
+const jwt = require('jsonwebtoken')
 
 var app = express()
 app.use(bodyParser.json())
@@ -27,7 +28,13 @@ app.post("/login", async function(req, res){
     try{
         if(await bcrypt.compare(req.body.password, user.password)) 
         {
-            res.send('Success')
+            var token = jwt.sign({
+                username: req.body.username
+            }, 'secret',{
+                expiresIn: "120"
+            })
+            res.status(200).send({
+                "token": token})
         } else{
             res.send('not allowed')
         }
