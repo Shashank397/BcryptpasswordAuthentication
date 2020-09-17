@@ -3,14 +3,14 @@ const bcrypt = require('bcrypt')
 const bodyParser = require('body-parser')
 const autheticate = require('./model/authenticate')
 const jwt = require('jsonwebtoken')
+const jwtMiddleware = require('./middleware/jwtMiddleware')
+const secret = require('./config/secret')
 
 var app = express()
 app.use(bodyParser.json())
 
 app.post('/signup', async function(req, res){
-    var salt = await bcrypt.genSalt()
-    console.log(salt)
-    var password = await bcrypt.hash(req.body.password, salt)
+    var password = await bcrypt.hash(req.body.password, 10)
     var username = req.body.username
     await autheticate.create({
         username,
@@ -30,8 +30,8 @@ app.post("/login", async function(req, res){
         {
             var token = jwt.sign({
                 username: req.body.username
-            }, 'secret',{
-                expiresIn: "120"
+            }, secret.jwt_secret,{
+                expiresIn: "1h"
             })
             res.status(200).send({
                 "token": token})
@@ -42,6 +42,10 @@ app.post("/login", async function(req, res){
     catch{
         res.status(500).send('got some error')
     }
+})
+
+app.post('/check', jwtMiddleware, (req, res) => {
+    res.send("Hello How are you")
 })
 
 
